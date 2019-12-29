@@ -195,6 +195,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         roundCount = 0;
         player1Turn = true;
+        player1Dot.setText("-----");
+        player2Dot.setText("");
     }
 
     private void resetGame() {
