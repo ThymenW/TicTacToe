@@ -33,7 +33,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sessionManager = SessionManager.getInstance(URI.create("ws://" + Constants.SERVER_URL + "/session"));
+        sessionManager = SessionManager.getInstance(URI.create("ws://" + Constants.SERVER_URL + "/session"), move -> {
+
+        });
         if (sessionManager != null) {
             sessionManager.connect();
             sessionManager.setConnectionLostTimeout(0);
@@ -66,7 +68,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int resID = getResources().getIdentifier(buttonID, "id", getPackageName());
                 buttons[i][j] = findViewById(resID);
                 buttons[i][j].setOnClickListener(this);
-
             }
         }
 
