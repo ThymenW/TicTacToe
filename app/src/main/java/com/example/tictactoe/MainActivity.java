@@ -1,15 +1,22 @@
 package com.example.tictactoe;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.tictactoe.services.net.SessionManager;
+
+import java.net.URI;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    private SessionManager sessionManager;
+
 
     private Button[][] buttons = new Button[3][3];
     private boolean player1Turn = true;
@@ -21,12 +28,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView player1Dot;
     private TextView player2Dot;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        sessionManager = SessionManager.getInstance(URI.create("ws://" + Constants.SERVER_URL + "/session"));
+        if (sessionManager != null) {
+            sessionManager.connect();
+            sessionManager.setConnectionLostTimeout(0);
+        } else {
+            Log.d("MAINACTIVITY_TAG", "onCreate: can't connect to server service");
+        }
+//        new Thread(() -> {
+//            while (true) {
+//                try {
+//                    Thread.sleep(5000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                try {
+//                    JSONObject jsonObject = new JSONObject();
+//                    jsonObject.put("a", "b");
+//                    String str = jsonObject.toString();
+//                    sessionManager.send(str);
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }).run();
         textViewPlayer1 = findViewById(R.id.text_view_p1);
         textViewPlayer2 = findViewById(R.id.text_view_p2);
 
@@ -38,7 +68,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 buttons[i][j].setOnClickListener(this);
 
             }
-
         }
 
         Button buttonReset = findViewById(R.id.button_reset);
