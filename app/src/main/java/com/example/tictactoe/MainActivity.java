@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.tictactoe.models.Mode;
+import com.example.tictactoe.models.Move;
 import com.example.tictactoe.services.net.SessionManager;
 
 import java.net.URI;
@@ -20,6 +21,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SessionManager sessionManager;
 
     private Mode gameMode;
+    private boolean isPlayer1 = false;
 
     private Button[][] buttons = new Button[3][3];
     private boolean player1Turn = true;
@@ -39,7 +41,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         gameMode = (Mode) intent.getSerializableExtra("GAME_MODE");
         if (gameMode == Mode.ONLINE) {
             sessionManager = SessionManager.getInstance(URI.create("ws://" + Constants.SERVER_URL + "/session"), move -> {
-
+                if (move.getPlayer() == -1) {
+                    isPlayer1 = true;
+                    runOnUiThread(() ->
+                            Toast.makeText(getApplicationContext(), "You are player 1", Toast.LENGTH_LONG).show());
+                    return;
+                }
+                if (move.getPlayer() == 0)
+                    buttons[move.getX()][move.getY()].setText("X");
+                else
+                    buttons[move.getX()][move.getY()].setText("O");
+                player1Turn = !player1Turn;
             });
             if (sessionManager != null) {
                 if (sessionManager.isClosed()) {
@@ -47,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else
                     sessionManager.connect();
                 sessionManager.setConnectionLostTimeout(0);
+
             } else {
                 Log.d("MAINACTIVITY_TAG", "onCreate: can't connect to server service");
             }
@@ -64,7 +77,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         buttons[i][j].setOnClickListener(this::aiGameLogic);
                         break;
                     case ONLINE:
-                        buttons[i][j].setOnClickListener(this::onlineGameLogic);
+                        final int x = i;
+                        final int y = j;
+                        buttons[i][j].setOnClickListener(v -> {
+                            onlineGameLogic(x, y);
+                        });
                         break;
                     case OFFLINE:
                         buttons[i][j].setOnClickListener(this::offlineGameLogic);
@@ -114,8 +131,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void onlineGameLogic(View v) {
-
+    private void onlineGameLogic(int x, int y) {
+        if (player1Turn && isPlayer1) {
+            player2Dot.setText("-----");
+            player1Dot.setText("");
+            sessionManager.send(new Move(x, y, 0));
+        } else if (!isPlayer1) {
+            sessionManager.send(new Move(x, y, 1));
+            player1Dot.setText("-----");
+            player2Dot.setText("");
+        }
     }
 
     private void aiGameLogic(View v) {
