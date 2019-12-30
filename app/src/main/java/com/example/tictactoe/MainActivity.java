@@ -1,5 +1,6 @@
 package com.example.tictactoe;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.tictactoe.models.Mode;
 import com.example.tictactoe.services.net.SessionManager;
 
 import java.net.URI;
@@ -17,6 +19,7 @@ import java.net.URI;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private SessionManager sessionManager;
 
+    private Mode gameMode;
 
     private Button[][] buttons = new Button[3][3];
     private boolean player1Turn = true;
@@ -32,33 +35,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Intent intent = getIntent();
+        gameMode = (Mode) intent.getSerializableExtra("GAME_MODE");
 
         sessionManager = SessionManager.getInstance(URI.create("ws://" + Constants.SERVER_URL + "/session"), move -> {
 
         });
         if (sessionManager != null) {
-            sessionManager.connect();
+            if (sessionManager.isClosed()) {
+                sessionManager.reconnect();
+            } else
+                sessionManager.connect();
             sessionManager.setConnectionLostTimeout(0);
         } else {
             Log.d("MAINACTIVITY_TAG", "onCreate: can't connect to server service");
         }
-//        new Thread(() -> {
-//            while (true) {
-//                try {
-//                    Thread.sleep(5000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//                try {
-//                    JSONObject jsonObject = new JSONObject();
-//                    jsonObject.put("a", "b");
-//                    String str = jsonObject.toString();
-//                    sessionManager.send(str);
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }).run();
+
         textViewPlayer1 = findViewById(R.id.text_view_p1);
         textViewPlayer2 = findViewById(R.id.text_view_p2);
 
@@ -67,17 +59,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String buttonID = "button_" + i + j;
                 int resID = getResources().getIdentifier(buttonID, "id", getPackageName());
                 buttons[i][j] = findViewById(resID);
-                buttons[i][j].setOnClickListener(this);
+                switch (gameMode) {
+                    case AI:
+                        buttons[i][j].setOnClickListener(this::aiGameLogic);
+                        break;
+                    case ONLINE:
+                        buttons[i][j].setOnClickListener(this::onlineGameLogic);
+                        break;
+                    case OFFLINE:
+                        buttons[i][j].setOnClickListener(this::offlineGameLogic);
+                        break;
+                }
             }
         }
 
         Button buttonReset = findViewById(R.id.button_reset);
-        buttonReset.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                resetGame();
-            }
-        });
+        buttonReset.setOnClickListener(v -> resetGame());
 
         player1Dot = findViewById(R.id.player1Dot);
         player2Dot = findViewById(R.id.player2Dot);
@@ -86,8 +83,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    @Override
-    public void onClick(View v) {
+    private void offlineGameLogic(View v) {
         if (!((Button) v).getText().toString().equals("")) {
             return;
         }
@@ -118,6 +114,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    private void onlineGameLogic(View v) {
+
+    }
+
+    private void aiGameLogic(View v) {
+
+    }
+
+    @Override
+    public void onClick(View v) {
+
+    }
+
     private boolean checkForWin() {
         String[][] field = new String[3][3];
 
@@ -125,7 +134,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             for (int j = 0; j < 3; j++) {
                 field[i][j] = buttons[i][j].getText().toString();
             }
-
         }
 
         for (int i = 0; i < 3; i++) {
@@ -161,6 +169,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         return false;
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        sessionManager.close();
+        sessionManager = null;
     }
 
     private void player1Wins() {

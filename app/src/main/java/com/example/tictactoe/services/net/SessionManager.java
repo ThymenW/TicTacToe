@@ -16,6 +16,7 @@ public class SessionManager extends WebSocketClient {
 
     private SessionManager(URI serverUri, EventCallback callback) {
         super(serverUri);
+        this.callback = callback;
     }
 
     public static SessionManager getInstance(URI serverUri, EventCallback callback) {
@@ -49,7 +50,6 @@ public class SessionManager extends WebSocketClient {
     @Override
     public void onClose(int code, String reason, boolean remote) {
         Log.d("EVENT_TAG", "onClose: " + reason);
-
     }
 
     @Override
