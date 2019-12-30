@@ -37,20 +37,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         Intent intent = getIntent();
         gameMode = (Mode) intent.getSerializableExtra("GAME_MODE");
+        if (gameMode == Mode.ONLINE) {
+            sessionManager = SessionManager.getInstance(URI.create("ws://" + Constants.SERVER_URL + "/session"), move -> {
 
-        sessionManager = SessionManager.getInstance(URI.create("ws://" + Constants.SERVER_URL + "/session"), move -> {
-
-        });
-        if (sessionManager != null) {
-            if (sessionManager.isClosed()) {
-                sessionManager.reconnect();
-            } else
-                sessionManager.connect();
-            sessionManager.setConnectionLostTimeout(0);
-        } else {
-            Log.d("MAINACTIVITY_TAG", "onCreate: can't connect to server service");
+            });
+            if (sessionManager != null) {
+                if (sessionManager.isClosed()) {
+                    sessionManager.reconnect();
+                } else
+                    sessionManager.connect();
+                sessionManager.setConnectionLostTimeout(0);
+            } else {
+                Log.d("MAINACTIVITY_TAG", "onCreate: can't connect to server service");
+            }
         }
-
         textViewPlayer1 = findViewById(R.id.text_view_p1);
         textViewPlayer2 = findViewById(R.id.text_view_p2);
 
