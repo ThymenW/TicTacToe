@@ -72,13 +72,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String buttonID = "button_" + i + j;
                 int resID = getResources().getIdentifier(buttonID, "id", getPackageName());
                 buttons[i][j] = findViewById(resID);
+                final int x = i;
+                final int y = j;
                 switch (gameMode) {
                     case AI:
-                        buttons[i][j].setOnClickListener(this::aiGameLogic);
+                        buttons[i][j].setOnClickListener(v -> {
+                            aiGameLogic(v, x, y);
+                        });
                         break;
                     case ONLINE:
-                        final int x = i;
-                        final int y = j;
                         buttons[i][j].setOnClickListener(v -> {
                             onlineGameLogic(x, y);
                         });
@@ -143,7 +145,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void aiGameLogic(View v) {
+    private void aiGameLogic(View v, int x, int y) {
+        
+        if (!((Button) v).getText().toString().equals("")) {
+            return;
+        }
+
+
+        if (player1Turn) {
+            ((Button) v).setText("X");
+            player1Turn = !player1Turn;
+            if (x == 0 && y == 0) {
+                buttons[0][1].setText("O");
+            } else if (x == 0 && y == 1) {
+                buttons[1][0].setText("O");
+            }
+        }
+
+        player1Turn = !player1Turn;
 
     }
 
@@ -209,6 +228,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toast.makeText(this, "Player 1 wins!", Toast.LENGTH_SHORT).show();
         updatePointsText();
         resetBoard();
+
+        player1Turn = false;
+        player1Dot.setText("");
+        player2Dot.setText("-----");
     }
 
     private void player2Wins() {
@@ -216,11 +239,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toast.makeText(this, "Player 2 wins!", Toast.LENGTH_SHORT).show();
         updatePointsText();
         resetBoard();
+
+        player1Turn = true;
+        player1Dot.setText("-----");
+        player2Dot.setText("");
     }
 
     private void draw() {
         Toast.makeText(this, "Draw!", Toast.LENGTH_SHORT).show();
         resetBoard();
+
+        player1Turn = true;
     }
 
     private void updatePointsText() {
@@ -236,9 +265,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         roundCount = 0;
-        player1Turn = true;
-        player1Dot.setText("-----");
-        player2Dot.setText("");
+
     }
 
     private void resetGame() {
