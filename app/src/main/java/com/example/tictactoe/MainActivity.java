@@ -2,9 +2,11 @@ package com.example.tictactoe;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,8 +34,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView textViewPlayer2;
     private TextView player1Dot;
     private TextView player2Dot;
+    private ImageView win_line_h_2;
+    private ImageView win_line_h_1;
+    private ImageView win_line_h_3;
+    private ImageView win_line_v_1;
+    private ImageView win_line_v_2;
+    private ImageView win_line_v_3;
+    private ImageView win_line_d_1;
+    private ImageView win_line_d_2;
+    private long waitForWin = 1000;
 
     @Override
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -66,6 +78,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         textViewPlayer1 = findViewById(R.id.text_view_p1);
         textViewPlayer2 = findViewById(R.id.text_view_p2);
+
+        win_line_h_2 = findViewById(R.id.win_line_h_2);
+        win_line_h_1 = findViewById(R.id.win_line_h_1);
+        win_line_h_3 = findViewById(R.id.win_line_h_3);
+        win_line_v_1 = findViewById(R.id.win_line_v_1);
+        win_line_v_2 = findViewById(R.id.win_line_v_2);
+        win_line_v_3 = findViewById(R.id.win_line_v_3);
+        win_line_d_1 = findViewById(R.id.win_line_d_1);
+        win_line_d_2 = findViewById(R.id.win_line_d_2);
 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
@@ -120,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         roundCount++;
 
+
         if (checkForWin()) {
             if (player1Turn) {
                 player1Wins();
@@ -146,30 +168,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void aiGameLogic(View v, int x, int y) {
-        
+
         if (!((Button) v).getText().toString().equals("")) {
             return;
         }
 
+        final Handler handler = new Handler();
 
         if (player1Turn) {
             ((Button) v).setText("X");
             player1Turn = !player1Turn;
-            if (x == 0 && y == 0) {
-                buttons[0][1].setText("O");
-            } else if (x == 0 && y == 1) {
-                buttons[1][0].setText("O");
-            }
+            handler.postDelayed(() -> {
+                if (x == 0 && y == 0) {
+                    buttons[0][1].setText("O");
+                } else if (x == 0 && y == 1) {
+                    buttons[1][0].setText("O");
+                }
+                player1Turn = !player1Turn;
+            }, 1000);
         }
-
-        player1Turn = !player1Turn;
-
     }
 
     @Override
     public void onClick(View v) {
 
     }
+
 
     private boolean checkForWin() {
         String[][] field = new String[3][3];
@@ -180,20 +204,66 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        for (int i = 0; i < 3; i++) {
-            if (field[i][0].equals(field[i][1])
-                    && field[i][0].equals(field[i][2])
-                    && !field[i][0].equals("")) {
 
+        for (int i = 0; i < 3; i++) {
+            if (field[0][0].equals(field[0][1])
+                    && field[0][0].equals(field[0][2])
+                    && !field[0][0].equals("")) {
+
+                win_line_h_1.setVisibility(View.VISIBLE);
+                return true;
+
+            }
+        }
+
+        for (int i = 0; i < 3; i++) {
+            if (field[1][0].equals(field[1][1])
+                    && field[1][0].equals(field[1][2])
+                    && !field[1][0].equals("")) {
+
+                win_line_h_2.setVisibility(View.VISIBLE);
+                return true;
+
+            }
+        }
+
+        for (int i = 0; i < 3; i++) {
+            if (field[2][0].equals(field[2][1])
+                    && field[2][0].equals(field[2][2])
+                    && !field[2][0].equals("")) {
+
+                win_line_h_3.setVisibility(View.VISIBLE);
+                return true;
+
+            }
+        }
+
+        for (int i = 0; i < 3; i++) {
+            if (field[0][0].equals(field[1][0])
+                    && field[0][0].equals(field[2][0])
+                    && !field[0][0].equals("")) {
+
+                win_line_v_1.setVisibility(View.VISIBLE);
                 return true;
             }
         }
 
         for (int i = 0; i < 3; i++) {
-            if (field[0][i].equals(field[1][i])
-                    && field[0][i].equals(field[2][i])
-                    && !field[0][i].equals("")) {
+            if (field[0][1].equals(field[1][1])
+                    && field[0][1].equals(field[2][1])
+                    && !field[0][1].equals("")) {
 
+                win_line_v_2.setVisibility(View.VISIBLE);
+                return true;
+            }
+        }
+
+        for (int i = 0; i < 3; i++) {
+            if (field[0][2].equals(field[1][2])
+                    && field[0][2].equals(field[2][2])
+                    && !field[0][2].equals("")) {
+
+                win_line_v_3.setVisibility(View.VISIBLE);
                 return true;
             }
         }
@@ -202,6 +272,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 && field[0][0].equals(field[2][2])
                 && !field[0][0].equals("")) {
 
+            win_line_d_1.setVisibility(View.VISIBLE);
             return true;
         }
 
@@ -209,6 +280,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 && field[0][2].equals(field[2][0])
                 && !field[0][2].equals("")) {
 
+            win_line_d_2.setVisibility(View.VISIBLE);
             return true;
         }
 
@@ -227,7 +299,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         player1Points++;
         Toast.makeText(this, "Player 1 wins!", Toast.LENGTH_SHORT).show();
         updatePointsText();
-        resetBoard();
+        final Handler handler = new Handler();
+        handler.postDelayed(() -> {
+            resetBoard();
+        }, waitForWin);
 
         player1Turn = false;
         player1Dot.setText("");
@@ -238,8 +313,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         player2Points++;
         Toast.makeText(this, "Player 2 wins!", Toast.LENGTH_SHORT).show();
         updatePointsText();
-        resetBoard();
-
+        final Handler handler = new Handler();
+        handler.postDelayed(() -> {
+            resetBoard();
+        }, waitForWin);
         player1Turn = true;
         player1Dot.setText("-----");
         player2Dot.setText("");
@@ -258,12 +335,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void resetBoard() {
+
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 buttons[i][j].setText("");
             }
         }
 
+
+        win_line_h_1.setVisibility(View.INVISIBLE);
+        win_line_h_2.setVisibility(View.INVISIBLE);
+        win_line_h_3.setVisibility(View.INVISIBLE);
+        win_line_v_1.setVisibility(View.INVISIBLE);
+        win_line_v_2.setVisibility(View.INVISIBLE);
+        win_line_v_3.setVisibility(View.INVISIBLE);
+        win_line_d_1.setVisibility(View.INVISIBLE);
+        win_line_d_2.setVisibility(View.INVISIBLE);
         roundCount = 0;
 
     }
