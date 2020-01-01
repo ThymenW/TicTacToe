@@ -16,6 +16,9 @@ import com.example.tictactoe.models.Move;
 import com.example.tictactoe.services.net.SessionManager;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private SessionManager sessionManager;
@@ -33,10 +36,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView player1Dot;
     private TextView player2Dot;
 
+    private AI ai;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         Intent intent = getIntent();
         gameMode = (Mode) intent.getSerializableExtra("GAME_MODE");
         if (gameMode == Mode.ONLINE) {
@@ -64,6 +70,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.d("MAINACTIVITY_TAG", "onCreate: can't connect to server service");
             }
         }
+        if (gameMode == Mode.AI)
+            ai = new AI(AI.AI_Algorithm.RANDOM);
+
         textViewPlayer1 = findViewById(R.id.text_view_p1);
         textViewPlayer2 = findViewById(R.id.text_view_p2);
 
@@ -151,20 +160,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-
         if (player1Turn) {
             ((Button) v).setText("X");
             player1Turn = !player1Turn;
-            if (x == 0 && y == 0) {
-                buttons[0][1].setText("O");
-            } else if (x == 0 && y == 1) {
-                buttons[1][0].setText("O");
+            ArrayList<Move> moves = new ArrayList<>();
+            for (int i = 0; i < buttons.length; i++) {
+                for (int j = 0; j < buttons[i].length; j++) {
+                    if (buttons[i][j].getText().equals(""))
+                        moves.add(new Move(i, j, 1));
+                }
             }
+            Move aiMove = ai.predict(moves);
+            if (aiMove == null) {
+                return;
+            }
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    buttons[aiMove.getX()][aiMove.getY()].setText("O");
+                    player1Turn = !player1Turn;
+                }
+            }, 1000);
         }
-
-        player1Turn = !player1Turn;
-
     }
+
 
     @Override
     public void onClick(View v) {
@@ -263,9 +282,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 buttons[i][j].setText("");
             }
         }
-
         roundCount = 0;
-
+        player1Turn = true;
     }
 
     private void resetGame() {
