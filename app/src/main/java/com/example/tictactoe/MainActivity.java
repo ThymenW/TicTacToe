@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
         if (gameMode == Mode.AI)
-            ai = new AI(AI.AI_Algorithm.MINIMAX);
+            ai = new AI(AI.AI_Algorithm.RANDOM);
 
         textViewPlayer1 = findViewById(R.id.text_view_p1);
         textViewPlayer2 = findViewById(R.id.text_view_p2);
@@ -107,7 +107,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         player2Dot = findViewById(R.id.player2Dot);
 
         player1Dot.setText("------");
-
+//        if (gameMode == Mode.AI) {
+//            player1Turn = false;
+//            ai = new AI(AI.AI_Algorithm.MINIMAX);
+//            String[][] board = new String[3][3];
+//            for (int i = 0; i < buttons.length; i++) {
+//                for (int j = 0; j < buttons[i].length; j++) {
+//                    board[i][j] = buttons[i][j].getText().toString();
+//                }
+//            }
+//            Move aiMove = ai.predict(board);
+//            if (aiMove == null) {
+//                return;
+//            }
+//            buttons[aiMove.getX()][aiMove.getY()].setText("O");
+//            player1Turn = true;
+//        }
     }
 
     private void offlineGameLogic(View v) {

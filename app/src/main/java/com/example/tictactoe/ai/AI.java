@@ -1,5 +1,7 @@
 package com.example.tictactoe.ai;
 
+import android.util.Log;
+
 import androidx.annotation.Nullable;
 
 import com.example.tictactoe.models.Move;
@@ -45,10 +47,10 @@ public class AI {
     private Move predictMiniMax(String[][] board) {
         int bestScore = -Integer.MAX_VALUE;
         Move move = null;
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
                 if (board[i][j].equals("")) {
-                    board[i][j] = "X";
+                    board[i][j] = "O";
                     int score = minimax(board, 0, false);
                     board[i][j] = "";
                     if (score > bestScore) {
@@ -58,14 +60,29 @@ public class AI {
                 }
             }
         }
+        Log.d(TAG, "predictMiniMax: " + bestScore);
         return move;
     }
 
+    private String boardToString(String[][] board) {
+        String str = "[";
+        for (int i = 0; i < board.length; i++) {
+            str += "[";
+            for (int j = 0; j < board[i].length; j++) {
+                str += "[" + board[i][j] + "]";
+            }
+            str += "]";
+        }
+        str += "]";
+        return str;
+    }
+
     private int minimax(String[][] board, int depth, boolean isMaximizing) {
+        //Log.d(TAG, "minimax: " + boardToString(board));
         if (isMaximizing) {
-            int bestScore = -Integer.MAX_VALUE;
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
+            int bestScore = -100000;
+            for (int i = 0; i < board.length; i++) {
+                for (int j = 0; j < board[i].length; j++) {
                     if (board[i][j].equals("")) {
                         board[i][j] = "O";
                         int score = minimax(board, depth + 1, false);
@@ -77,15 +94,15 @@ public class AI {
             }
             return bestScore;
         }
-        int bestScore = Integer.MAX_VALUE;
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        int bestScore = 100000;
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
                 if (board[i][j].equals("")) {
                     board[i][j] = "X";
                     int score = minimax(board, depth + 1, true);
                     board[i][j] = "";
                     if (score < bestScore) {
-
+                        bestScore = score;
                     }
                 }
             }
