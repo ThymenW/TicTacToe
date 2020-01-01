@@ -2,6 +2,7 @@ package com.example.tictactoe;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -11,14 +12,12 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.tictactoe.ai.AI;
 import com.example.tictactoe.models.Mode;
 import com.example.tictactoe.models.Move;
 import com.example.tictactoe.services.net.SessionManager;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private SessionManager sessionManager;
@@ -71,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
         if (gameMode == Mode.AI)
-            ai = new AI(AI.AI_Algorithm.RANDOM);
+            ai = new AI(AI.AI_Algorithm.MINIMAX);
 
         textViewPlayer1 = findViewById(R.id.text_view_p1);
         textViewPlayer2 = findViewById(R.id.text_view_p2);
@@ -155,32 +154,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void aiGameLogic(View v, int x, int y) {
-        
+
         if (!((Button) v).getText().toString().equals("")) {
             return;
         }
 
         if (player1Turn) {
             ((Button) v).setText("X");
+            if (checkForWin()) {
+                if (player1Turn) {
+                    player1Wins();
+                } else {
+                    player2Wins();
+                }
+                return;
+            }
             player1Turn = !player1Turn;
-            ArrayList<Move> moves = new ArrayList<>();
+            String[][] board = new String[3][3];
             for (int i = 0; i < buttons.length; i++) {
                 for (int j = 0; j < buttons[i].length; j++) {
-                    if (buttons[i][j].getText().equals(""))
-                        moves.add(new Move(i, j, 1));
+                    board[i][j] = buttons[i][j].getText().toString();
                 }
             }
-            Move aiMove = ai.predict(moves);
+            Move aiMove = ai.predict(board);
             if (aiMove == null) {
                 return;
             }
-            new Timer().schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    buttons[aiMove.getX()][aiMove.getY()].setText("O");
+            final Handler handler = new Handler();
+            handler.postDelayed(() -> {
+                buttons[aiMove.getX()][aiMove.getY()].setText("O");
+
+                roundCount++;
+
+                if (checkForWin()) {
+                    if (player1Turn) {
+                        player1Wins();
+                    } else {
+                        player2Wins();
+                    }
+                } else if (roundCount == 9) {
+                    draw();
+                } else {
                     player1Turn = !player1Turn;
                 }
             }, 1000);
+
         }
     }
 
@@ -248,7 +266,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         updatePointsText();
         resetBoard();
 
-        player1Turn = false;
+        player1Turn = true;
         player1Dot.setText("");
         player2Dot.setText("-----");
     }
