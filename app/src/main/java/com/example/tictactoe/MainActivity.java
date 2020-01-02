@@ -13,6 +13,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.tictactoe.ai.AI;
 import com.example.tictactoe.models.Mode;
 import com.example.tictactoe.models.Move;
 import com.example.tictactoe.services.net.SessionManager;
@@ -44,11 +45,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageView win_line_d_2;
     private long waitForWin = 1000;
 
+    private AI ai;
+
     @Override
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         Intent intent = getIntent();
         gameMode = (Mode) intent.getSerializableExtra("GAME_MODE");
         if (gameMode == Mode.ONLINE) {
@@ -76,6 +80,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.d("MAINACTIVITY_TAG", "onCreate: can't connect to server service");
             }
         }
+        if (gameMode == Mode.AI)
+            ai = new AI(AI.AI_Algorithm.RANDOM);
+
         textViewPlayer1 = findViewById(R.id.text_view_p1);
         textViewPlayer2 = findViewById(R.id.text_view_p2);
 
@@ -120,7 +127,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         player2Dot = findViewById(R.id.player2Dot);
 
         player1Dot.setText("------");
-
+//        if (gameMode == Mode.AI) {
+//            player1Turn = false;
+//            ai = new AI(AI.AI_Algorithm.MINIMAX);
+//            String[][] board = new String[3][3];
+//            for (int i = 0; i < buttons.length; i++) {
+//                for (int j = 0; j < buttons[i].length; j++) {
+//                    board[i][j] = buttons[i][j].getText().toString();
+//                }
+//            }
+//            Move aiMove = ai.predict(board);
+//            if (aiMove == null) {
+//                return;
+//            }
+//            buttons[aiMove.getX()][aiMove.getY()].setText("O");
+//            player1Turn = true;
+//        }
     }
 
     private void offlineGameLogic(View v) {
@@ -173,21 +195,49 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        final Handler handler = new Handler();
-
         if (player1Turn) {
             ((Button) v).setText("X");
-            player1Turn = !player1Turn;
-            handler.postDelayed(() -> {
-                if (x == 0 && y == 0) {
-                    buttons[0][1].setText("O");
-                } else if (x == 0 && y == 1) {
-                    buttons[1][0].setText("O");
+            if (checkForWin()) {
+                if (player1Turn) {
+                    player1Wins();
+                } else {
+                    player2Wins();
                 }
-                player1Turn = !player1Turn;
+                return;
+            }
+            player1Turn = !player1Turn;
+            String[][] board = new String[3][3];
+            for (int i = 0; i < buttons.length; i++) {
+                for (int j = 0; j < buttons[i].length; j++) {
+                    board[i][j] = buttons[i][j].getText().toString();
+                }
+            }
+            Move aiMove = ai.predict(board);
+            if (aiMove == null) {
+                return;
+            }
+            final Handler handler = new Handler();
+            handler.postDelayed(() -> {
+                buttons[aiMove.getX()][aiMove.getY()].setText("O");
+
+                roundCount++;
+
+                if (checkForWin()) {
+                    if (player1Turn) {
+                        player1Wins();
+                    } else {
+                        player2Wins();
+                    }
+                } else if (roundCount == 9) {
+                    draw();
+                } else {
+                    player1Turn = !player1Turn;
+                }
             }, 1000);
+
         }
     }
+
 
     @Override
     public void onClick(View v) {
@@ -304,7 +354,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             resetBoard();
         }, waitForWin);
 
-        player1Turn = false;
+        player1Turn = true;
         player1Dot.setText("");
         player2Dot.setText("-----");
     }
@@ -352,7 +402,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         win_line_d_1.setVisibility(View.INVISIBLE);
         win_line_d_2.setVisibility(View.INVISIBLE);
         roundCount = 0;
-
+        player1Turn = true;
     }
 
     private void resetGame() {
