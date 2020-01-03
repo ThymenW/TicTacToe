@@ -62,11 +62,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     runOnUiThread(() ->
                             Toast.makeText(getApplicationContext(), "You are player 1", Toast.LENGTH_LONG).show());
                     return;
+                } else if (move.getPlayer() == -2) {
+                    isPlayer1 = false;
+                    runOnUiThread(() ->
+                            Toast.makeText(getApplicationContext(), "You are player 2", Toast.LENGTH_LONG).show());
+                    return;
+                }
+                if (!buttons[move.getX()][move.getY()].getText().equals("")) {
+                    sessionManager.send(new Move(-1, -1, -3));
+                    return;
                 }
                 if (move.getPlayer() == 0)
                     buttons[move.getX()][move.getY()].setText("X");
                 else
                     buttons[move.getX()][move.getY()].setText("O");
+                if (checkForWin())
+                    if (player1Turn)
+                        player1Wins();
+                    else player2Wins();
                 player1Turn = !player1Turn;
             });
             if (sessionManager != null) {
@@ -127,22 +140,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         player2Dot = findViewById(R.id.player2Dot);
 
         player1Dot.setText("------");
-//        if (gameMode == Mode.AI) {
-//            player1Turn = false;
-//            ai = new AI(AI.AI_Algorithm.MINIMAX);
-//            String[][] board = new String[3][3];
-//            for (int i = 0; i < buttons.length; i++) {
-//                for (int j = 0; j < buttons[i].length; j++) {
-//                    board[i][j] = buttons[i][j].getText().toString();
-//                }
-//            }
-//            Move aiMove = ai.predict(board);
-//            if (aiMove == null) {
-//                return;
-//            }
-//            buttons[aiMove.getX()][aiMove.getY()].setText("O");
-//            player1Turn = true;
-//        }
     }
 
     private void offlineGameLogic(View v) {
@@ -182,11 +179,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             player2Dot.setText("-----");
             player1Dot.setText("");
             sessionManager.send(new Move(x, y, 0));
-        } else if (!isPlayer1) {
+        } else if (!isPlayer1 && !player1Turn) {
             sessionManager.send(new Move(x, y, 1));
             player1Dot.setText("-----");
             player2Dot.setText("");
         }
+
     }
 
     private void aiGameLogic(View v, int x, int y) {
@@ -197,12 +195,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (player1Turn) {
             ((Button) v).setText("X");
+            roundCount++;
             if (checkForWin()) {
                 if (player1Turn) {
                     player1Wins();
                 } else {
                     player2Wins();
                 }
+                return;
+            } else if (roundCount == 9) {
+                draw();
                 return;
             }
             player1Turn = !player1Turn;
@@ -374,8 +376,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void draw() {
         Toast.makeText(this, "Draw!", Toast.LENGTH_SHORT).show();
-        resetBoard();
-
+        final Handler handler = new Handler();
+        handler.postDelayed(() -> {
+            resetBoard();
+        }, waitForWin);
         player1Turn = true;
     }
 
